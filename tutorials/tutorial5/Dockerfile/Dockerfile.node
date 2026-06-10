@@ -1,0 +1,22 @@
+# Image used for BOTH the OVS switches and the end hosts.
+# Hosts simply ignore the OVS tooling; switches use it via start-switch.sh.
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        openvswitch-switch \
+        openvswitch-common \
+        iproute2 \
+        iputils-ping \
+        tcpdump \
+        iperf3 \
+        net-tools \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY start-switch.sh /start-switch.sh
+RUN chmod +x /start-switch.sh
+
+# Keep the container alive; containerlab runs the real setup via `exec:`.
+CMD ["sleep", "infinity"]

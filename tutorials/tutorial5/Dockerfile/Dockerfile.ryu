@@ -1,0 +1,28 @@
+FROM python:3.9-slim
+
+RUN pip install --upgrade pip
+RUN pip install "setuptools<58" wheel
+
+RUN pip install --no-cache-dir \
+        "eventlet==0.30.2" \
+        "dnspython==1.16.0" \
+        netaddr \
+        "oslo.config" \
+        msgpack \
+        six \
+        tinyrpc \
+        routes \
+        webob
+
+RUN apt-get update && apt-get install -y git && \
+    git clone --branch v4.34 --depth 1 https://github.com/osrg/ryu.git /tmp/ryu && \
+    cd /tmp/ryu && \
+    pip install --no-build-isolation . && \
+    rm -rf /tmp/ryu && \
+    apt-get remove -y git && apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY apps/ /apps/
+WORKDIR /apps
+
+CMD ["sleep", "infinity"]

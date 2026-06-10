@@ -1,0 +1,46 @@
+name: sdn
+
+mgmt:
+  network: clab-sdn
+  ipv4-subnet: 172.20.20.0/24
+
+topology:
+  kinds:
+    linux:
+      # Default image for every node unless overridden (hosts + switch).
+      image: sdn-node:latest
+
+  nodes:
+    # ---- SDN controller -------------------------------------------------
+    ctrl:
+      kind: linux
+      image: sdn-ryu:latest
+      mgmt-ipv4: 172.20.20.10   # fixed IP so switches always find it
+
+    # ---- OpenFlow switch ------------------------------------------------
+    s1:
+      kind: linux
+      exec:
+        - bash /start-switch.sh 172.20.20.10
+
+    # ---- end hosts ------------------------------------------------------
+    h1:
+      kind: linux
+      exec:
+        - ip addr add 10.0.0.1/24 dev eth1
+        - ip link set eth1 up
+    h2:
+      kind: linux
+      exec:
+        - ip addr add 10.0.0.2/24 dev eth1
+        - ip link set eth1 up
+    h3:
+      kind: linux
+      exec:
+        - ip addr add 10.0.0.3/24 dev eth1
+        - ip link set eth1 up
+
+  links:
+    - endpoints: ["s1:eth1", "h1:eth1"]
+    - endpoints: ["s1:eth2", "h2:eth1"]
+    - endpoints: ["s1:eth3", "h3:eth1"]
