@@ -1,0 +1,37 @@
+name: rdt-lab
+
+topology:
+  nodes:
+    sender:
+      kind: linux
+      image: alpine-nettools:latest
+      binds:
+        - apps:/apps
+      exec:
+        - ip addr add 10.0.1.1/24 dev eth1
+        - ip route add 10.0.2.0/24 via 10.0.1.2
+
+    middlebox:
+      kind: linux
+      image: alpine-nettools:latest
+      binds:
+        - apps:/apps
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+        - ip addr add 10.0.1.2/24 dev eth1
+        - ip addr add 10.0.2.2/24 dev eth2
+        # tc netem: start with 0% loss; students will change this
+        - tc qdisc add dev eth2 root netem loss 0%
+
+    receiver:
+      kind: linux
+      image: alpine-nettools:latest
+      binds:
+        - apps:/apps
+      exec:
+        - ip addr add 10.0.2.1/24 dev eth2
+        - ip route add 10.0.1.0/24 via 10.0.2.2
+
+  links:
+    - endpoints: ["sender:eth1",    "middlebox:eth1"]
+    - endpoints: ["middlebox:eth2", "receiver:eth2"]
